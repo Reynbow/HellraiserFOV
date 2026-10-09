@@ -73,6 +73,8 @@ bool Init(std::string& error);
 int ProcessEventSlot();
 // The slot of ProcessEvent in a UObject vtable (uses L.funcFlags); -1 if not found.
 int FindProcessEventSlot(void** vtable);
+// For the offline check: points the name lookups at a hand-made name table (FNameEntryAllocator::Blocks).
+void UseNameBlocksForTest(uint8_t** blocks);
 
 template <class T>
 inline T& At(void* base, int64_t offset) {
@@ -83,7 +85,9 @@ inline void* Ptr(void* base, int64_t offset) { return At<void*>(base, offset); }
 // ---- names and objects ------------------------------------------------------------------------
 
 std::string NameToString(FName name);
-bool NameEquals(FName name, const char* text);  // exact, without building a string
+// Whether |name| is |text|, ignoring case as the engine does, without building a string.
+bool NameEquals(FName name, const char* text);
+bool SameText(const std::string& a, const char* b);  // ASCII, ignoring case
 std::string ObjectName(const void* object);     // e.g. "PlayerCharacter_C_0"
 std::string ClassName(const void* object);      // name of the object's class
 std::string FullName(const void* object);       // "Class Package.Outer.Name", for the log

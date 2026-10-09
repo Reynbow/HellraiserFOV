@@ -8,6 +8,7 @@
 
 #include <algorithm>
 #include <cstdio>
+#include <cstring>
 #include <string>
 #include <vector>
 
@@ -125,6 +126,35 @@ int wmain(int argc, wchar_t** argv) {
   // Found in a plain UObject vtable (the mod uses UObject's own). Actors override the slot with
   // AActor::ProcessEvent, which checks the actor before calling the original.
   ExpectSlot("ProcessEvent slot (viewport vtable)", ue::FindProcessEventSlot(viewportVtable), 76);
+
+  printf("\nName lookups (on a hand-made name table):\n");
+  {
+    // Entries: a 16-bit header (bit 0 wide, bits 6-15 length) and the characters, 2-byte aligned. The
+    // engine keeps the spelling registered first, so a class called Canvas can be stored as "canvas".
+    alignas(8) static uint8_t block[64] = {};
+    const auto put = [](uint8_t* at, const char* s, bool wide) {
+      const auto n = static_cast<uint16_t>(strlen(s));
+      const uint16_t header = static_cast<uint16_t>(n << 6 | (wide ? 1 : 0));
+      memcpy(at, &header, 2);
+      for (uint16_t i = 0; i < n; ++i) {
+        if (wide) {
+          const wchar_t c = static_cast<unsigned char>(s[i]);
+          memcpy(at + 2 + i * 2, &c, 2);
+        } else {
+          at[2 + i] = static_cast<uint8_t>(s[i]);
+        }
+      }
+    };
+    put(block, "canvas", false);       // entry id 0
+    put(block + 16, "CANVAS", true);   // entry id 8 (byte offset 16 / 2)
+    static uint8_t* blocks[1] = {block};
+    ue::UseNameBlocksForTest(blocks);
+    Check(ue::NameEquals({0, 0}, "Canvas"), "\"Canvas\" matches the stored spelling \"canvas\"");
+    Check(ue::NameEquals({8, 0}, "Canvas"), "\"Canvas\" matches a wide \"CANVAS\" entry");
+    Check(!ue::NameEquals({0, 0}, "Canva") && !ue::NameEquals({0, 0}, "Canvass"), "other names don't match");
+    Check(ue::NameEquals({0, 1}, "Canvas_0") && !ue::NameEquals({0, 1}, "Canvas"), "numbered names compare with their number");
+    ue::UseNameBlocksForTest(nullptr);
+  }
 
   printf("\nVtable hooking (on this process's private copy of the image):\n");
   if (cameraVtable) {

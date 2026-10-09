@@ -377,6 +377,8 @@ bool Init(std::string& error) {
 
 int ProcessEventSlot() { return g_peSlot; }
 
+void UseNameBlocksForTest(uint8_t** blocks) { g_nameBlocks = blocks; }
+
 std::string NameToString(FName name) {
   const uint8_t* e = NameEntry(name.index);
   if (!e) return "?";
@@ -393,20 +395,32 @@ std::string NameToString(FName name) {
   return out;
 }
 
+// FNames compare without regard to case, like the engine's: the name table keeps one entry per
+// name, spelled the way it was first registered, so "Canvas" can be stored as "canvas" if
+// something registered that spelling first (it differs from PC to PC with the content loaded).
 bool NameEquals(FName name, const char* text) {
-  if (name.number) return NameToString(name) == text;
+  if (name.number) return SameText(NameToString(name), text);
   const uint8_t* e = NameEntry(name.index);
   if (!e) return false;
   const uint16_t header = *reinterpret_cast<const uint16_t*>(e);
   const size_t length = header >> 6;
   if (strlen(text) != length) return false;
-  if (!(header & 1)) return memcmp(e + 2, text, length) == 0;
+  const auto lower = [](unsigned c) { return c >= 'A' && c <= 'Z' ? c + ('a' - 'A') : c; };
+  if (!(header & 1)) {
+    const auto* chars = e + 2;
+    for (size_t i = 0; i < length; ++i) {
+      if (lower(chars[i]) != lower(static_cast<unsigned char>(text[i]))) return false;
+    }
+    return true;
+  }
   const auto* chars = reinterpret_cast<const wchar_t*>(e + 2);
   for (size_t i = 0; i < length; ++i) {
-    if (chars[i] != static_cast<unsigned char>(text[i])) return false;
+    if (lower(chars[i]) != lower(static_cast<unsigned char>(text[i]))) return false;
   }
   return true;
 }
+
+bool SameText(const std::string& a, const char* b) { return _stricmp(a.c_str(), b) == 0; }
 
 std::string ObjectName(const void* object) {
   return object ? NameToString(At<FName>(const_cast<void*>(object), L.objName)) : "null";
@@ -506,12 +520,13 @@ Prop FindProp(void* ustruct, const char* name) {
       p.size = At<int32_t>(f, L.propElemSize) * At<int32_t>(f, L.propArrayDim);
       void* fieldClass = Ptr(f, L.ffClass);
       p.type = fieldClass ? NameToString(At<FName>(fieldClass, 0)) : "?";
-      if (p.type == "BoolProperty") {
+      if (SameText(p.type, "BoolProperty")) {
         // { uint8 FieldSize, ByteOffset, ByteMask, FieldMask }
         p.offset += At<uint8_t>(f, L.propSize + 1);
         p.boolMask = At<uint8_t>(f, L.propSize + 2);
-      } else if (p.type == "StructProperty" || p.type == "ObjectProperty" || p.type == "ClassProperty" ||
-                 p.type == "WeakObjectProperty" || p.type == "SoftObjectProperty") {
+      } else if (SameText(p.type, "StructProperty") || SameText(p.type, "ObjectProperty") ||
+                 SameText(p.type, "ClassProperty") || SameText(p.type, "WeakObjectProperty") ||
+                 SameText(p.type, "SoftObjectProperty")) {
         p.inner = Ptr(f, L.propSize);
       }
       return p;
@@ -591,7 +606,7 @@ void DumpStruct(void* ustruct) {
       void* fieldClass = Ptr(f, L.ffClass);
       const std::string type = fieldClass ? NameToString(At<FName>(fieldClass, 0)) : "?";
       std::string extra;
-      if (type == "StructProperty" || type == "ObjectProperty") extra = " " + ObjectName(Ptr(f, L.propSize));
+      if (SameText(type, "StructProperty") || SameText(type, "ObjectProperty")) extra = " " + ObjectName(Ptr(f, L.propSize));
       LOG("    +0x%04X %-36s %s%s", At<int32_t>(f, L.propOffset), NameToString(At<FName>(f, L.ffName)).c_str(),
           type.c_str(), extra.c_str());
     }
