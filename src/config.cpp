@@ -87,7 +87,7 @@ void Save() {
     return;
   }
   fprintf(f,
-          "; Hellraiser FOV settings. Change them in game with the menu (F6 by default), or edit this file while\n"
+          "; TrueFOV settings (Hellraiser: Revival). Change them in game with the menu (F6 by default), or edit this file while\n"
           "; the game is closed.\n\n[General]\n");
   fprintf(f, "Enabled=%d\n", S.enabled ? 1 : 0);
   fprintf(f, "; Gameplay field of view in degrees, on the same scale as the game's own camera FOV.\n");

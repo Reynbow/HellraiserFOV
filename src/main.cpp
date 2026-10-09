@@ -1,4 +1,4 @@
-// Hellraiser FOV: gameplay-only field of view for Clive Barker's Hellraiser: Revival.
+// TrueFOV for Clive Barker's Hellraiser: Revival: gameplay-only field of view.
 //
 // Built as winmm.dll: the game imports winmm, so Windows loads this file from the game's
 // Binaries\Win64 folder. Every winmm export forwards to the real system DLL (proxy_exports.h).
@@ -116,7 +116,7 @@ std::wstring ModuleDirectory(HMODULE module) {
 DWORD WINAPI InitThread(void*) {
   const std::wstring dir = ModuleDirectory(g_self);
   logx::Open((dir + L"HellraiserFOV.log").c_str());  // one log per session: each launch starts it fresh
-  LOG("Hellraiser FOV %s", kVersion);
+  LOG("TrueFOV %s for Hellraiser: Revival", kVersion);
   cfg::Load(dir + L"HellraiserFOV.ini");
 
   scan::Image image;

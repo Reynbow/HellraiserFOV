@@ -1,8 +1,8 @@
-# Hellraiser FOV - Gameplay Field of View for Hellraiser: Revival
+# TrueFOV - Gameplay Field of View for Hellraiser: Revival
 
 A mod for Clive Barker's Hellraiser: Revival: your own field of view for gameplay only, a separate FOV for aiming down sights and for your arms and held items, all set live in a menu in the game.
 
-Download and install instructions are on Nexus Mods (search for Hellraiser FOV in the Clive Barker's Hellraiser: Revival section). This repository is the full source.
+Download and install instructions are on Nexus Mods (search for TrueFOV in the Clive Barker's Hellraiser: Revival section). This repository is the full source.
 
 ## Features
 

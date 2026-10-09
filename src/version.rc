@@ -1,5 +1,5 @@
 // Version information shown in the DLL's Properties > Details tab, so it's clear this winmm.dll is
-// the Hellraiser FOV mod and not the Windows file.
+// the TrueFOV mod and not the Windows file.
 #include <winver.h>
 
 #include "version.h"
@@ -17,8 +17,8 @@ BEGIN
   BEGIN
     BLOCK "040904b0"
     BEGIN
-      VALUE "ProductName", "Hellraiser FOV"
-      VALUE "FileDescription", "Hellraiser FOV - gameplay-only FOV mod for Clive Barker's Hellraiser: Revival (winmm.dll proxy)"
+      VALUE "ProductName", "TrueFOV (Hellraiser: Revival)"
+      VALUE "FileDescription", "TrueFOV - gameplay-only FOV mod for Clive Barker's Hellraiser: Revival (winmm.dll proxy)"
       VALUE "FileVersion", HFOV_VERSION_STRING
       VALUE "ProductVersion", HFOV_VERSION_STRING
       VALUE "InternalName", "HellraiserFOV"
