@@ -1,0 +1,33 @@
+// Version information shown in the DLL's Properties > Details tab, so it's clear this winmm.dll is
+// the Hellraiser FOV mod and not the Windows file.
+#include <winver.h>
+
+#include "version.h"
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION HFOV_VERSION_MAJOR, HFOV_VERSION_MINOR, HFOV_VERSION_PATCH, 0
+ PRODUCTVERSION HFOV_VERSION_MAJOR, HFOV_VERSION_MINOR, HFOV_VERSION_PATCH, 0
+ FILEFLAGSMASK VS_FFI_FILEFLAGSMASK
+ FILEFLAGS 0
+ FILEOS VOS_NT_WINDOWS32
+ FILETYPE VFT_DLL
+ FILESUBTYPE VFT2_UNKNOWN
+BEGIN
+  BLOCK "StringFileInfo"
+  BEGIN
+    BLOCK "040904b0"
+    BEGIN
+      VALUE "ProductName", "Hellraiser FOV"
+      VALUE "FileDescription", "Hellraiser FOV - gameplay-only FOV mod for Clive Barker's Hellraiser: Revival (winmm.dll proxy)"
+      VALUE "FileVersion", HFOV_VERSION_STRING
+      VALUE "ProductVersion", HFOV_VERSION_STRING
+      VALUE "InternalName", "HellraiserFOV"
+      VALUE "OriginalFilename", "winmm.dll"
+      VALUE "Comments", "Forwards all winmm functions to the Windows copy. Delete this file to uninstall the mod."
+    END
+  END
+  BLOCK "VarFileInfo"
+  BEGIN
+    VALUE "Translation", 0x0409, 1200
+  END
+END

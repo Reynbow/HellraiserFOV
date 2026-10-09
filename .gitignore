@@ -1,0 +1,7 @@
+build/
+release/
+*.obj
+*.pdb
+*.ilk
+*.exp
+*.lib
