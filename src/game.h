@@ -67,6 +67,18 @@ struct Offsets {
   ue::Prop Cam_OverrideAspect;         // UCameraComponent::bOverrideAspectRatioAxisConstraint (log only)
   ue::Prop Cam_ConstrainAspect;        // UCameraComponent::bConstrainAspectRatio (log only)
   int32_t Settings_FOV = -1;           // UInfernoUserSettings::FOV (log only)
+  // Camera bob (bob.cpp): the player camera follows the camera_jnt bone of the character mesh.
+  int32_t Scene_AttachParent = -1;     // USceneComponent::AttachParent
+  int32_t Scene_AttachSocket = -1;     // USceneComponent::AttachSocketName (FName)
+  int32_t Mesh_AnimInstance = -1;      // USkeletalMeshComponent::AnimScriptInstance
+  int32_t Ctrl_ControlRotation = -1;   // AController::ControlRotation (FRotator, doubles)
+  int32_t Char_Movement = -1;          // ACharacter::CharacterMovement
+  int32_t Move_Velocity = -1;          // UMovementComponent::Velocity (FVector, doubles)
+  int32_t POV_Location = -1;           // FMinimalViewInfo::Location (FVector, doubles)
+  int32_t POV_Rotation = -1;           // FMinimalViewInfo::Rotation (FRotator, doubles)
+  int32_t Xform_Rotation = -1;         // FTransform::Rotation (FQuat, doubles)
+  int32_t Xform_Translation = -1;      // FTransform::Translation (FVector, doubles)
+  int32_t PCM_ModifierList = -1;       // APlayerCameraManager::ModifierList (log only)
 };
 
 struct Classes {
@@ -80,6 +92,9 @@ struct Functions {
   ue::Function K2DrawTexture;  // UCanvas::K2_DrawTexture
   ue::Function K2DrawText;     // UCanvas::K2_DrawText
   ue::Function K2TextSize;     // UCanvas::K2_TextSize
+  ue::Function GetSocketTransform;       // USceneComponent::GetSocketTransform(FName, ERelativeTransformSpace)
+  ue::Function IsAnyMontagePlaying;      // UAnimInstance::IsAnyMontagePlaying
+  ue::Function GetCurrentActiveMontage;  // UAnimInstance::GetCurrentActiveMontage (log only)
 };
 
 // A function of the player character, bound to the character's actual class: the game's
@@ -128,6 +143,8 @@ void* GameViewport();
 // function isn't bound.
 float CallFloat(const ue::Function& fn, void* object, float fallback);
 bool CallBool(const ue::Function& fn, void* object, bool fallback);
+// The same for one that returns an object; nullptr if the function isn't bound.
+void* CallObject(const ue::Function& fn, void* object);
 // The same for a player character function (binding it to the character's class first).
 float CallFloat(PlayerFunction& fn, void* character, float fallback);
 bool CallBool(PlayerFunction& fn, void* character, bool fallback);

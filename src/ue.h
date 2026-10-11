@@ -127,6 +127,15 @@ struct Prop {
 Prop FindProp(void* ustruct, const char* name);
 int32_t Offset(void* ustruct, const char* name);  // -1 if there's no such property
 
+// An array property (TArray) and what it holds.
+struct ArrayProp {
+  int32_t offset = -1;          // of the TArray in the object
+  int32_t elemSize = 0;         // bytes per element
+  void* innerStruct = nullptr;  // the element's UScriptStruct, for arrays of structs
+  bool Valid() const { return offset >= 0 && elemSize > 0; }
+};
+ArrayProp FindArray(void* ustruct, const char* name);
+
 // Reads a bool property described by |p| from |base| (handles bitfields).
 bool ReadBool(void* base, const Prop& p);
 void WriteBool(void* base, const Prop& p, bool value);

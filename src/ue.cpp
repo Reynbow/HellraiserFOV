@@ -537,6 +537,34 @@ Prop FindProp(void* ustruct, const char* name) {
 
 int32_t Offset(void* ustruct, const char* name) { return ustruct ? FindProp(ustruct, name).offset : -1; }
 
+ArrayProp FindArray(void* ustruct, const char* name) {
+  ArrayProp a;
+  for (void* s = ustruct; s; s = SuperOf(s)) {
+    for (void* f = Ptr(s, L.structProps); f; f = Ptr(f, L.ffNext)) {
+      if (!NameEquals(At<FName>(f, L.ffName), name)) continue;
+      void* fieldClass = Ptr(f, L.ffClass);
+      if (!fieldClass || !NameEquals(At<FName>(fieldClass, 0), "ArrayProperty")) return a;
+      // FArrayProperty { EArrayPropertyFlags ArrayFlags; FProperty* Inner; } in Unreal Engine 5
+      // (Inner alone in some versions): the element's own property, which has the array's name.
+      void* inner = nullptr;
+      for (int32_t o : {L.propSize + 8, L.propSize}) {
+        uintptr_t p = 0;
+        if (Read(reinterpret_cast<uintptr_t>(f) + o, p) && Plausible(p) && SafeNameEquals(p + L.ffName, name)) {
+          inner = reinterpret_cast<void*>(p);
+          break;
+        }
+      }
+      if (!inner) return a;
+      a.offset = At<int32_t>(f, L.propOffset);
+      a.elemSize = At<int32_t>(inner, L.propElemSize);
+      void* innerClass = Ptr(inner, L.ffClass);
+      if (innerClass && NameEquals(At<FName>(innerClass, 0), "StructProperty")) a.innerStruct = Ptr(inner, L.propSize);
+      return a;
+    }
+  }
+  return a;
+}
+
 bool ReadBool(void* base, const Prop& p) {
   return p.Valid() && (At<uint8_t>(base, p.offset) & (p.boolMask ? p.boolMask : 0xFF)) != 0;
 }

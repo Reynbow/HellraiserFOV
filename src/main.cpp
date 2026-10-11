@@ -1,4 +1,5 @@
-// TrueFOV for Clive Barker's Hellraiser: Revival: gameplay-only field of view.
+// TrueFOV for Clive Barker's Hellraiser: Revival: gameplay-only field of view, and the camera bob
+// taken out if you like.
 //
 // Built as winmm.dll: the game imports winmm, so Windows loads this file from the game's
 // Binaries\Win64 folder. Every winmm export forwards to the real system DLL (proxy_exports.h).
@@ -8,6 +9,7 @@
 #include <cwchar>
 #include <string>
 
+#include "bob.h"
 #include "canvas.h"
 #include "config.h"
 #include "fov.h"
@@ -35,6 +37,7 @@ PostRenderFn g_originalPostRender = nullptr;
 void Frame(void* viewportClient, void* canvas) {
   const double now = util::Now();
   fov::OnFrame(viewportClient, now);
+  bob::OnFrame(fov::St.cameraManager, now);
   ui::OnFrame(viewportClient, canvas, now);
   cfg::SaveIfDirty(now);
 }

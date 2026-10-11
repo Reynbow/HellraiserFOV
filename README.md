@@ -1,6 +1,6 @@
 # TrueFOV - Gameplay Field of View for Hellraiser: Revival
 
-A mod for Clive Barker's Hellraiser: Revival: your own field of view for gameplay only, a separate FOV for aiming down sights and for your arms and held items, all set live in a menu in the game.
+A mod for Clive Barker's Hellraiser: Revival: your own field of view for gameplay only, a separate FOV for aiming down sights and for your arms and held items, and the camera bob turned off if you like, all set live in a menu in the game.
 
 Download and install instructions are on Nexus Mods (search for TrueFOV in the Clive Barker's Hellraiser: Revival section). This repository is the full source.
 
@@ -11,6 +11,7 @@ Download and install instructions are on Nexus Mods (search for TrueFOV in the C
 - Aim FOV: your own FOV while aiming down sights, or the game's own aiming FOV (the default).
 - Viewmodel FOV: the FOV of your arms and held items, set separately (the game draws them with a FOV of their own).
 - Keeps the game's FOV effects: the game's own FOV changes, such as sprinting and climbing ladders, are kept, scaled around your FOV. Can be turned off.
+- Camera bobbing: turn the camera bob off entirely (the game's own setting only reduces it). Crouching, looking around and the camera moves in takedowns and other scripted animations still play as the game made them.
 - Smooth transitions: the blend time between your FOV and the game's is adjustable, from instant up to 2 seconds.
 - Hotkeys: Page Up / Page Down change the FOV at any time (with a small popup), End toggles the mod for a quick comparison.
 - Any resolution and aspect ratio, ultrawide included; the menu stays sharp at any resolution and Windows display scaling.
@@ -34,6 +35,7 @@ The game loads `winmm.dll` from its own folder first. This one forwards every re
 - **The FOV:** the player camera manager's `ApplyCameraModifiers` runs once per view target every frame; the mod rescales the FOV only when that view target is the player's own view. The game renders the player through `BP_PlayerCamera`, the child actor of the character's `FPCameraActor` component; cutscene cameras are separate view targets, so they're never touched, and blends between them and the player interpolate naturally. Changes blend in and out over the configurable time, in tan(FOV/2) space so they're proportional on screen. With **Keep the game's FOV effects** on, your FOV scales around the game's own gameplay FOV (the player Blueprint's `GetDefaultCameraFov`), so the game's sprint and ladder FOV changes are kept.
 - **Aiming:** while `IsAimingDownSight` says the player is aiming, the FOV eases towards the Aim FOV, or by default towards the game's own aiming FOV, not scaled by your gameplay FOV.
 - **Viewmodel FOV:** the game uses the engine's first-person rendering, which draws the arms and held items with a FOV of their own (`FMinimalViewInfo::FirstPersonFOV`). With a viewmodel FOV set, the mod changes that value in the same hook, blended like the main FOV, and keeps any change the game makes to it (such as aiming) scaled around its usual value.
+- **Camera bob:** the player camera hangs from the `camera_jnt` bone of the character mesh, so the walk and sprint animations move it with every step. With **Camera bobbing** off, the same hook steps in before the game adds its camera shakes and camera animations: it takes the camera's position in the frame of that mesh (which crouching and stair steps don't jolt) and its rotation relative to the control rotation, follows both through a two-stage low-pass filter (slower while moving, quicker while looking around), and moves the camera back to that steady point. The steady camera never strays more than 8 cm or 5° from the game's, so larger moves such as crouching carry it along, followed by a short quick catch-up. While an animation montage (`UAnimInstance::IsAnyMontagePlaying`) moves the camera, the game's camera is used until the montage ends, and the steady camera blends back in afterwards.
 - **The menu:** drawn with the engine's own `UCanvas` from `UGameViewportClient::PostRender` (no D3D12 hooking), through the canvas's `K2_DrawTexture`, `K2_DrawText` and `K2_TextSize` functions called with `ProcessEvent`. Text is rasterized at the exact size needed (the runtime font's `LegacyFontSize` is set for each call), so it stays sharp at any resolution and Windows display scaling. Keyboard and mouse input come from the game window's messages; keys the mod uses, and the mouse while the menu is open, aren't passed on to the game.
 
 There is no network code; the mod writes only its own settings and log files in the game's `Binaries\Win64` folder.

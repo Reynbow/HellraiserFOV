@@ -68,10 +68,21 @@ constexpr float kFooterReserve = 135.f;  // footer height including the optional
 
 // ---- menu model -----------------------------------------------------------------------------
 
-enum class Row : uint8_t { Fov, AdsFov, ViewmodelFov, Enabled, Transition, KeepEffects, Popup, MenuScale, ResetAll };
+enum class Row : uint8_t {
+  Fov,
+  AdsFov,
+  ViewmodelFov,
+  Enabled,
+  Transition,
+  KeepEffects,
+  CameraBob,
+  Popup,
+  MenuScale,
+  ResetAll
+};
 
-constexpr Row kRows[] = {Row::Fov,         Row::AdsFov, Row::ViewmodelFov, Row::Enabled,  Row::Transition,
-                         Row::KeepEffects, Row::Popup,  Row::MenuScale,    Row::ResetAll};
+constexpr Row kRows[] = {Row::Fov,         Row::AdsFov,    Row::ViewmodelFov, Row::Enabled,   Row::Transition,
+                         Row::KeepEffects, Row::CameraBob, Row::Popup,        Row::MenuScale, Row::ResetAll};
 constexpr int kNumRows = static_cast<int>(sizeof kRows / sizeof kRows[0]);
 
 bool IsSliderRow(Row kind) { return kind == Row::Fov || kind == Row::AdsFov || kind == Row::ViewmodelFov; }
@@ -97,6 +108,7 @@ const wchar_t* Label(Row k) {
     case Row::Enabled: return L"FOV mod";
     case Row::Transition: return L"Blend time";
     case Row::KeepEffects: return L"Keep the game's FOV effects";
+    case Row::CameraBob: return L"Camera bobbing";
     case Row::Popup: return L"FOV popup on hotkeys";
     case Row::MenuScale: return L"Menu size";
     case Row::ResetAll: return L"Reset all settings";
@@ -180,6 +192,7 @@ bool* Flag(Row k) {
   switch (k) {
     case Row::Enabled: return &s.enabled;
     case Row::KeepEffects: return &s.keepGameFovEffects;
+    case Row::CameraBob: return &s.cameraBob;
     case Row::Popup: return &s.popup;
     default: return nullptr;
   }
@@ -212,6 +225,7 @@ void ResetRow(Row k) {
     case Row::MenuScale: SetNumber(k, d.menuScale); break;
     case Row::Enabled: cfg::S.enabled = d.enabled; cfg::MarkDirty(); break;
     case Row::KeepEffects: cfg::S.keepGameFovEffects = d.keepGameFovEffects; cfg::MarkDirty(); break;
+    case Row::CameraBob: cfg::S.cameraBob = d.cameraBob; cfg::MarkDirty(); break;
     case Row::Popup: cfg::S.popup = d.popup; cfg::MarkDirty(); break;
     case Row::ResetAll: break;
   }

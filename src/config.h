@@ -16,6 +16,7 @@ struct Settings {
   float viewmodelFov = 0.f;   // FOV of the first-person arms and held items; 0 = the game's own
   float transitionSeconds = 0.25f;
   bool keepGameFovEffects = true;  // sprinting, climbing ladders... scaled around your FOV
+  bool cameraBob = true;           // the game's camera bob; false = the camera is held steady
   bool popup = true;
   float menuScale = 1.f;
   int keyMenu = 0x75;     // F6

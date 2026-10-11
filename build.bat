@@ -19,7 +19,7 @@ if not exist build mkdir build
 
 rem /utf-8: the sources are UTF-8 (the menu uses characters such as the degree sign).
 set CFLAGS=/nologo /utf-8 /O2 /MT /EHa /std:c++20 /W4 /wd4100 /Zi /DWIN32_LEAN_AND_MEAN /DNOMINMAX /DUNICODE /D_UNICODE
-set SOURCES=src\main.cpp src\canvas.cpp src\config.cpp src\fov.cpp src\game.cpp src\input.cpp src\log.cpp src\scan.cpp src\ue.cpp src\ui.cpp
+set SOURCES=src\main.cpp src\bob.cpp src\canvas.cpp src\config.cpp src\fov.cpp src\game.cpp src\input.cpp src\log.cpp src\scan.cpp src\ue.cpp src\ui.cpp
 
 echo Building winmm.dll ...
 rc /nologo /fo build\version.res src\version.rc || exit /b 1

@@ -8,6 +8,7 @@
 #include <cstdio>
 #include <string>
 
+#include "bob.h"
 #include "config.h"
 #include "game.h"
 #include "log.h"
@@ -169,15 +170,21 @@ void ApplyViewmodel(void* pov, double a) {
   St.lastViewmodelOut = out;
 }
 
-void ApplyToPov(void* cameraManager, void* pov) {
-  // Which view target is being updated? Only the current and pending ones reach the screen.
+// The player character if |pov| is the view of the player's own camera, else nullptr; |pc| gets
+// the player controller. Only the current and pending view targets reach the screen.
+void* PlayerViewOf(void* cameraManager, void* pov, void*& pc) {
   char* vt = static_cast<char*>(pov) - O.VT_POV;
   char* mgr = static_cast<char*>(cameraManager);
-  if (vt != mgr + O.PCM_ViewTarget && vt != mgr + O.PCM_PendingViewTarget) return;
-
-  void* pc = ue::Ptr(cameraManager, O.PCM_PCOwner);
+  if (vt != mgr + O.PCM_ViewTarget && vt != mgr + O.PCM_PendingViewTarget) return nullptr;
+  pc = ue::Ptr(cameraManager, O.PCM_PCOwner);
   void* pawn = pc ? ue::Ptr(pc, O.Ctrl_Pawn) : nullptr;
-  if (!pawn || !ue::IsA(pawn, C.PlayerCharacter) || !IsPlayerView(ue::Ptr(vt, O.VT_Target), pawn)) return;
+  if (!pawn || !ue::IsA(pawn, C.PlayerCharacter) || !IsPlayerView(ue::Ptr(vt, O.VT_Target), pawn)) return nullptr;
+  return pawn;
+}
+
+void ApplyToPov(void* cameraManager, void* pov) {
+  void* pc = nullptr;
+  if (!PlayerViewOf(cameraManager, pov, pc)) return;
 
   float& fov = ue::At<float>(pov, O.POV_FOV);
   const float in = fov;
@@ -239,6 +246,15 @@ void SafeApplyToPov(void* cameraManager, void* pov) {
   }
 }
 
+void SafeSteady(void* cameraManager, float deltaTime, void* pov) {
+  __try {
+    void* pc = nullptr;
+    if (void* character = PlayerViewOf(cameraManager, pov, pc)) bob::BeforeModifiers(character, pc, pov, deltaTime);
+  } __except (EXCEPTION_EXECUTE_HANDLER) {
+    InterlockedIncrement(&g_faults);
+  }
+}
+
 ApplyCameraModifiersFn OriginalFor(void* self) {
   void** vtable = *static_cast<void***>(self);
   for (int i = 0; i < g_numHooked; ++i) {
@@ -247,7 +263,10 @@ ApplyCameraModifiersFn OriginalFor(void* self) {
   return nullptr;
 }
 
+// The camera bob is taken out of the camera's own view, before the game adds its camera shakes and
+// camera animations; the FOV is set on the finished view.
 void __fastcall HookApplyCameraModifiers(void* self, float deltaTime, void* pov) {
+  SafeSteady(self, deltaTime, pov);
   if (ApplyCameraModifiersFn original = OriginalFor(self)) original(self, deltaTime, pov);
   SafeApplyToPov(self, pov);
 }

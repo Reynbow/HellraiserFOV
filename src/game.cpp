@@ -197,6 +197,32 @@ bool Resolve(std::string& error) {
   prop(C.CameraComponent, "UCameraComponent", "bConstrainAspectRatio", O.Cam_ConstrainAspect, true);
   offset(C.InfernoUserSettings, "UInfernoUserSettings", "FOV", O.Settings_FOV, true);
 
+  // Camera bob (optional: without these the Camera bobbing setting does nothing).
+  void* sceneComponent = ue::FindClass("SceneComponent");
+  void* skeletalMesh = ue::FindClass("SkeletalMeshComponent");
+  void* animInstance = ue::FindClass("AnimInstance");
+  void* character = ue::FindClass("Character");
+  void* movement = ue::FindClass("MovementComponent");
+  void* transform = ue::FindStruct("Transform");
+  offset(sceneComponent, "USceneComponent", "AttachParent", O.Scene_AttachParent, true);
+  offset(sceneComponent, "USceneComponent", "AttachSocketName", O.Scene_AttachSocket, true);
+  offset(skeletalMesh, "USkeletalMeshComponent", "AnimScriptInstance", O.Mesh_AnimInstance, true);
+  offset(controller, "AController", "ControlRotation", O.Ctrl_ControlRotation, true);
+  offset(character, "ACharacter", "CharacterMovement", O.Char_Movement, true);
+  offset(movement, "UMovementComponent", "Velocity", O.Move_Velocity, true);
+  offset(viewInfo, "FMinimalViewInfo", "Location", O.POV_Location, true);
+  offset(viewInfo, "FMinimalViewInfo", "Rotation", O.POV_Rotation, true);
+  offset(transform, "FTransform", "Rotation", O.Xform_Rotation, true);
+  offset(transform, "FTransform", "Translation", O.Xform_Translation, true);
+  offset(cameraManager, "APlayerCameraManager", "ModifierList", O.PCM_ModifierList, true);
+  if (!F.GetSocketTransform.Bind(sceneComponent, "GetSocketTransform")) {
+    LOG("Optional USceneComponent::GetSocketTransform not found");
+  }
+  if (!F.IsAnyMontagePlaying.Bind(animInstance, "IsAnyMontagePlaying")) {
+    LOG("Optional UAnimInstance::IsAnyMontagePlaying not found");
+  }
+  F.GetCurrentActiveMontage.Bind(animInstance, "GetCurrentActiveMontage");
+
   if (!F.K2DrawTexture.Bind(canvas, "K2_DrawTexture")) missing.push_back("UCanvas::K2_DrawTexture");
   if (!F.K2DrawText.Bind(canvas, "K2_DrawText")) missing.push_back("UCanvas::K2_DrawText");
   if (!F.K2TextSize.Bind(canvas, "K2_TextSize")) missing.push_back("UCanvas::K2_TextSize");
@@ -250,6 +276,16 @@ bool CallBool(const ue::Function& fn, void* object, bool fallback) {
   }
   fn.Call(object, params);
   return ue::At<uint8_t>(params, fn.Return()) != 0;
+}
+
+void* CallObject(const ue::Function& fn, void* object) {
+  alignas(16) uint8_t params[64] = {};
+  if (!fn.Bound() || !object || fn.Return() < 0 || fn.ReturnSize() != 8 ||
+      fn.ParamsSize() > static_cast<int32_t>(sizeof params)) {
+    return nullptr;
+  }
+  fn.Call(object, params);
+  return ue::Ptr(params, fn.Return());
 }
 
 bool PlayerFunction::BindTo(void* character) {

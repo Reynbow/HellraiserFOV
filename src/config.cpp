@@ -66,6 +66,7 @@ void Load(const std::wstring& path) {
     S.viewmodelFov = ReadFloat(L"General", L"ViewmodelFOV", S.viewmodelFov);
     S.transitionSeconds = ReadFloat(L"General", L"TransitionSeconds", S.transitionSeconds);
     S.keepGameFovEffects = ReadInt(L"General", L"KeepGameFovEffects", S.keepGameFovEffects) != 0;
+    S.cameraBob = ReadInt(L"General", L"CameraBobbing", S.cameraBob) != 0;
     S.popup = ReadInt(L"General", L"ShowPopup", S.popup) != 0;
     S.menuScale = ReadFloat(L"General", L"MenuScale", S.menuScale);
     S.keyMenu = ReadInt(L"Keys", L"ToggleMenu", S.keyMenu);
@@ -76,8 +77,8 @@ void Load(const std::wstring& path) {
     Sanitize(S);
   }
   Save();  // creates the file on first run and adds any options introduced by updates
-  LOG("Settings: enabled=%d fov=%.1f aim=%.1f viewmodel=%.1f transition=%.2f keepEffects=%d verbose=%d", S.enabled,
-      S.fov, S.adsFov, S.viewmodelFov, S.transitionSeconds, S.keepGameFovEffects, S.verbose);
+  LOG("Settings: enabled=%d fov=%.1f aim=%.1f viewmodel=%.1f transition=%.2f keepEffects=%d cameraBob=%d verbose=%d",
+      S.enabled, S.fov, S.adsFov, S.viewmodelFov, S.transitionSeconds, S.keepGameFovEffects, S.cameraBob, S.verbose);
 }
 
 void Save() {
@@ -101,6 +102,10 @@ void Save() {
   fprintf(f, "; 1 = keep the game's own FOV changes (sprinting, ladders...), scaled around your FOV.\n");
   fprintf(f, "; 0 = always exactly GameplayFOV (and AimFOV).\n");
   fprintf(f, "KeepGameFovEffects=%d\n", S.keepGameFovEffects ? 1 : 0);
+  fprintf(f, "; 1 = the game's own camera bob when walking and running. 0 = the camera is held steady (camera moves\n");
+  fprintf(f, "; in takedowns and other scripted moves still play as the game made them). Works on its own, whatever\n");
+  fprintf(f, "; Enabled is.\n");
+  fprintf(f, "CameraBobbing=%d\n", S.cameraBob ? 1 : 0);
   fprintf(f, "; Show the FOV popup when using the FOV hotkeys.\n");
   fprintf(f, "ShowPopup=%d\n", S.popup ? 1 : 0);
   fprintf(f, "MenuScale=%.2f\n", S.menuScale);
