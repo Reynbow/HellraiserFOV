@@ -149,23 +149,18 @@ void LearnAimFov(float in) {
   prev = in;
 }
 
-// While the game draws the first-person meshes (arms, held items) with a FOV of their own, they
-// follow the viewmodel FOV instead, blended in and out like the main FOV. Changes the game makes
-// to its own value (such as aiming) are kept, scaled around its usual value.
-void ApplyViewmodel(void* pov, double a) {
+// The game draws the first-person meshes (arms, held items) with a FOV of their own, and keeps it
+// equal to the camera's FOV at all times (gameplay, sprinting, aiming), so in first-person scenes
+// (picking up a gun, opening a door) the hands line up with the world. It gets the same change as
+// the camera's FOV (|scale|, in tan(FOV/2)), which keeps the two equal.
+void ApplyViewmodel(void* pov, double scale) {
   St.lastViewmodelOut = 0.f;
   if (O.POV_FirstPersonFOV < 0 || !O.POV_UseFirstPerson.Valid() || !ue::ReadBool(pov, O.POV_UseFirstPerson)) return;
   float& fp = ue::At<float>(pov, O.POV_FirstPersonFOV);
   const float game = fp;
   if (!Plausible(game)) return;
   St.gameViewmodelFov = game;
-  St.lastViewmodelOut = game;
-  static float usual = 0.f;  // the game's value when not aiming
-  if (usual <= 0.f || (!St.aiming && St.zoomAlpha <= 0.f)) usual = game;
-  if (cfg::S.viewmodelFov <= 0.f || a <= 0.0) return;
-  const double tGame = TanHalf(game);
-  const double tTarget = TanHalf(cfg::S.viewmodelFov) * tGame / TanHalf(usual);
-  const float out = util::Clamp(static_cast<float>(FromTanHalf(tGame + (tTarget - tGame) * a)), kMinOut, kMaxOut);
+  const float out = util::Clamp(static_cast<float>(FromTanHalf(TanHalf(game) * scale)), kMinOut, kMaxOut);
   fp = out;
   St.lastViewmodelOut = out;
 }
@@ -205,7 +200,7 @@ void ApplyToPov(void* cameraManager, void* pov) {
 
   const double a = Ease(St.alpha);
   if (a <= 0.0 || !Plausible(in)) {
-    ApplyViewmodel(pov, 0.0);
+    ApplyViewmodel(pov, 1.0);
     return;
   }
 
@@ -235,7 +230,7 @@ void ApplyToPov(void* cameraManager, void* pov) {
       desired = util::Clamp(static_cast<float>(FromTanHalf(TanHalf(desired) * tOut / tIn)), kMinOut, kMaxOut);
     }
   }
-  ApplyViewmodel(pov, a);
+  ApplyViewmodel(pov, TanHalf(out) / tIn);
 }
 
 void SafeApplyToPov(void* cameraManager, void* pov) {

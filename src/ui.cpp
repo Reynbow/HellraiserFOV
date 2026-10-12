@@ -68,24 +68,13 @@ constexpr float kFooterReserve = 135.f;  // footer height including the optional
 
 // ---- menu model -----------------------------------------------------------------------------
 
-enum class Row : uint8_t {
-  Fov,
-  AdsFov,
-  ViewmodelFov,
-  Enabled,
-  Transition,
-  KeepEffects,
-  CameraBob,
-  Popup,
-  MenuScale,
-  ResetAll
-};
+enum class Row : uint8_t { Fov, AdsFov, Enabled, Transition, KeepEffects, CameraBob, Popup, MenuScale, ResetAll };
 
-constexpr Row kRows[] = {Row::Fov,         Row::AdsFov,    Row::ViewmodelFov, Row::Enabled,   Row::Transition,
-                         Row::KeepEffects, Row::CameraBob, Row::Popup,        Row::MenuScale, Row::ResetAll};
+constexpr Row kRows[] = {Row::Fov,       Row::AdsFov, Row::Enabled,   Row::Transition, Row::KeepEffects,
+                         Row::CameraBob, Row::Popup,  Row::MenuScale, Row::ResetAll};
 constexpr int kNumRows = static_cast<int>(sizeof kRows / sizeof kRows[0]);
 
-bool IsSliderRow(Row kind) { return kind == Row::Fov || kind == Row::AdsFov || kind == Row::ViewmodelFov; }
+bool IsSliderRow(Row kind) { return kind == Row::Fov || kind == Row::AdsFov; }
 
 float RowDp(Row k) { return IsSliderRow(k) ? 72.f : 38.f; }
 
@@ -104,7 +93,6 @@ const wchar_t* Label(Row k) {
   switch (k) {
     case Row::Fov: return L"Gameplay FOV";
     case Row::AdsFov: return L"Aim FOV (aiming down sights)";
-    case Row::ViewmodelFov: return L"Viewmodel FOV (arms and held items)";
     case Row::Enabled: return L"FOV mod";
     case Row::Transition: return L"Blend time";
     case Row::KeepEffects: return L"Keep the game's FOV effects";
@@ -130,7 +118,6 @@ NumberSpec Number(Row kind) {
   switch (kind) {
     case Row::Fov: return {&s.fov, 1.f, 5.f, cfg::kMinFov, cfg::kMaxFov, true};
     case Row::AdsFov: return {&s.adsFov, 1.f, 5.f, cfg::kMinFov, cfg::kMaxFov, true};  // 0 = the game's
-    case Row::ViewmodelFov: return {&s.viewmodelFov, 1.f, 5.f, cfg::kMinFov, cfg::kMaxFov, true};  // 0 = the game's
     case Row::Transition: return {&s.transitionSeconds, 0.05f, 0.25f, 0.f, 2.f, false};
     case Row::MenuScale: {
       const float fit = std::floor(g_menuScaleFit * 20.f + 1e-3f) / 20.f;  // whole 0.05 steps that fit
@@ -155,16 +142,13 @@ void SetNumber(Row kind, float v) {
   cfg::MarkDirty();
 }
 
-// The aim and viewmodel FOVs are 0 while they follow the game's own.
-bool FollowsGame(Row kind) {
-  return (kind == Row::AdsFov && cfg::S.adsFov == 0.f) || (kind == Row::ViewmodelFov && cfg::S.viewmodelFov == 0.f);
-}
+// The aim FOV is 0 while it follows the game's own.
+bool FollowsGame(Row kind) { return kind == Row::AdsFov && cfg::S.adsFov == 0.f; }
 
-// The game's own value for a FOV row: its gameplay FOV, where its aiming FOV settles, or the FOV
-// it draws the arms and held items with. 0 until seen.
+// The game's own value for a FOV row: its gameplay FOV, or where its aiming FOV settles. 0 until
+// seen.
 float GameValue(Row kind) {
   if (kind == Row::AdsFov) return fov::St.gameAimFov;
-  if (kind == Row::ViewmodelFov) return fov::St.gameViewmodelFov;
   return fov::St.gameBase > 1.f ? fov::St.gameBase : 0.f;
 }
 
@@ -212,12 +196,6 @@ void ResetRow(Row k) {
     case Row::AdsFov:
       if (cfg::S.adsFov != d.adsFov) {
         cfg::S.adsFov = d.adsFov;  // back to the game's (outside the slider's range)
-        cfg::MarkDirty();
-      }
-      break;
-    case Row::ViewmodelFov:
-      if (cfg::S.viewmodelFov != d.viewmodelFov) {
-        cfg::S.viewmodelFov = d.viewmodelFov;  // back to the game's (outside the slider's range)
         cfg::MarkDirty();
       }
       break;
@@ -365,7 +343,6 @@ void Activate(Row k, double now, uint32_t msgTime) {
     }
     case Row::Fov:
     case Row::AdsFov:
-    case Row::ViewmodelFov:
     case Row::Transition:
     case Row::MenuScale: break;
     default: Toggle(k); break;
@@ -504,8 +481,8 @@ Stepper LayoutStepper(const Ctx& c, const Rect& row, float bandH, float valueW) 
   return s;
 }
 
-// A FOV with -/+ and a slider. The tick marks the game's own value. An aim or viewmodel FOV that
-// follows the game's shows "Game" and a grey thumb at the game's value.
+// A FOV with -/+ and a slider. The tick marks the game's own value. An aim FOV that follows the
+// game's shows "Game" and a grey thumb at the game's value.
 void DrawFovRow(Ctx& c, Row k, const Rect& row) {
   const float band = c.D(40.f);
   const Stepper st = LayoutStepper(c, row, band, 96.f);
@@ -744,8 +721,7 @@ void DrawMenu(Ctx& c) {
     const Rect row{x, ry, w, c.D(RowDp(k))};
     switch (k) {
       case Row::Fov:
-      case Row::AdsFov:
-      case Row::ViewmodelFov: DrawFovRow(c, k, row); break;
+      case Row::AdsFov: DrawFovRow(c, k, row); break;
       case Row::Transition:
       case Row::MenuScale: DrawNumberRow(c, k, row); break;
       case Row::ResetAll: DrawResetRow(c, k, row); break;

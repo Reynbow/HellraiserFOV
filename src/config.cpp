@@ -47,7 +47,6 @@ void Sanitize(Settings& s) {
   const Settings d;
   s.fov = Sanitized(s.fov, kMinFov, kMaxFov, d.fov);
   if (s.adsFov != 0.f) s.adsFov = Sanitized(s.adsFov, kMinFov, kMaxFov, d.adsFov);
-  if (s.viewmodelFov != 0.f) s.viewmodelFov = Sanitized(s.viewmodelFov, kMinFov, kMaxFov, d.viewmodelFov);
   s.transitionSeconds = Sanitized(s.transitionSeconds, 0.f, 2.f, d.transitionSeconds);
   s.menuScale = Sanitized(s.menuScale, kMinMenuScale, kMaxMenuScale, d.menuScale);
 }
@@ -63,7 +62,6 @@ void Load(const std::wstring& path) {
     S.enabled = ReadInt(L"General", L"Enabled", S.enabled) != 0;
     S.fov = ReadFloat(L"General", L"GameplayFOV", S.fov);
     S.adsFov = ReadFloat(L"General", L"AimFOV", S.adsFov);
-    S.viewmodelFov = ReadFloat(L"General", L"ViewmodelFOV", S.viewmodelFov);
     S.transitionSeconds = ReadFloat(L"General", L"TransitionSeconds", S.transitionSeconds);
     S.keepGameFovEffects = ReadInt(L"General", L"KeepGameFovEffects", S.keepGameFovEffects) != 0;
     S.cameraBob = ReadInt(L"General", L"CameraBobbing", S.cameraBob) != 0;
@@ -77,8 +75,8 @@ void Load(const std::wstring& path) {
     Sanitize(S);
   }
   Save();  // creates the file on first run and adds any options introduced by updates
-  LOG("Settings: enabled=%d fov=%.1f aim=%.1f viewmodel=%.1f transition=%.2f keepEffects=%d cameraBob=%d verbose=%d",
-      S.enabled, S.fov, S.adsFov, S.viewmodelFov, S.transitionSeconds, S.keepGameFovEffects, S.cameraBob, S.verbose);
+  LOG("Settings: enabled=%d fov=%.1f aim=%.1f transition=%.2f keepEffects=%d cameraBob=%d verbose=%d", S.enabled, S.fov,
+      S.adsFov, S.transitionSeconds, S.keepGameFovEffects, S.cameraBob, S.verbose);
 }
 
 void Save() {
@@ -95,8 +93,6 @@ void Save() {
   fprintf(f, "GameplayFOV=%.1f\n", S.fov);
   fprintf(f, "; FOV while aiming down sights. 0 = the game's own aiming FOV, whatever GameplayFOV is.\n");
   fprintf(f, "AimFOV=%.1f\n", S.adsFov);
-  fprintf(f, "; FOV of your first-person arms and held items. 0 = the game's own.\n");
-  fprintf(f, "ViewmodelFOV=%.1f\n", S.viewmodelFov);
   fprintf(f, "; Seconds to blend between your FOV and the game's when gameplay starts or stops.\n");
   fprintf(f, "TransitionSeconds=%.2f\n", S.transitionSeconds);
   fprintf(f, "; 1 = keep the game's own FOV changes (sprinting, ladders...), scaled around your FOV.\n");

@@ -13,7 +13,6 @@ struct Settings {
   bool enabled = true;
   float fov = 100.f;          // gameplay FOV
   float adsFov = 0.f;         // FOV while aiming down sights; 0 = the game's own
-  float viewmodelFov = 0.f;   // FOV of the first-person arms and held items; 0 = the game's own
   float transitionSeconds = 0.25f;
   bool keepGameFovEffects = true;  // sprinting, climbing ladders... scaled around your FOV
   bool cameraBob = true;           // the game's camera bob; false = the camera is held steady

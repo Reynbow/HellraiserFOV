@@ -24,7 +24,8 @@ struct Status {
   bool aiming = false;
   float zoomAlpha = 0.f;    // 0 = not aiming, 1 = aiming; eased like the game's own zoom
   float gameAimFov = 0.f;   // where the game's aiming FOV settles, once seen (0 = not yet)
-  // First-person meshes (arms, held items), when the game draws them with a FOV of their own.
+  // First-person meshes (arms, held items), which the game draws with a FOV of their own (equal to
+  // the camera's); the mod changes it with the camera's FOV. For the log.
   float gameViewmodelFov = 0.f;  // the game's FOV for them, last seen (0 = never seen)
   float lastViewmodelOut = 0.f;  // after the mod, last frame (0 = not drawn with their own FOV)
   double lastPovTime = -1.0;
